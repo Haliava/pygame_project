@@ -1,4 +1,5 @@
 import pygame
+import math
 import os
 
 TILE_SIZE = 50
@@ -31,6 +32,8 @@ class Player(pygame.sprite.Sprite, GameObject):
     def move(self, x, y):
         old_x, old_y, w, h = self.rect
         self.rect = pygame.Rect(old_x, old_y + y, w, h)
+        if self.vy == 0 and not self.collide_with_sth(Wall)[0]:
+            self.vy = 5 * self.direction
         if self.collide_with_sth(Wall)[0]:
             collision_coords = self.collide_with_sth(Wall)[1]
             self.rect.y = collision_coords[1] + -(TILE_SIZE * self.direction)
@@ -84,21 +87,49 @@ class Exit(pygame.sprite.Sprite, GameObject):
 
 class Light(pygame.sprite.Sprite, GameObject):
     def __init__(self, x, y):
-        super().__init__(light_beam, all_sprites)
-        self.x = x
-        self.y = y
+        super().__init__(light_group, all_sprites)
         self.vx = 0
         self.vy = 1
-        self.beam_path = [(TILE_SIZE * x, TILE_SIZE * y)]
-        self.rect = pygame.Rect(TILE_SIZE * x, TILE_SIZE * y, TILE_SIZE, TILE_SIZE)
+        self.rect = pygame.Rect(TILE_SIZE * x, TILE_SIZE * y, TILE_SIZE - 20, TILE_SIZE)
+        self.beam_path = [self.rect]
 
     def update(self, *args):
+        if self.vx > 0 or self.vy > 0 \
+                and (TILE_SIZE * (self.rect.x + self.vx), TILE_SIZE * (self.rect.y + self.vy)) not in self.beam_path \
+                and not self.collide_with_sth()[0]:
+            self.rect = pygame.Rect(self.rect.x + TILE_SIZE * self.vx,
+                                    self.rect.y + TILE_SIZE * self.vy,
+                                    TILE_SIZE - 20, TILE_SIZE)
+            self.beam_path.append(self.rect)
+        rect_screen = pygame.Surface((1300, 750))
+        rect_screen.set_colorkey((0, 0, 0))
         for light_piece in self.beam_path:
-            pygame.draw.rect(screen, pygame.Color('violet'),
-                             pygame.Rect(light_piece, (TILE_SIZE, TILE_SIZE)))
-        if self.vx > 0 or self.vy > 0 and (TILE_SIZE * (self.x + self.vx),
-                                           TILE_SIZE * (self.y + self.vy)) not in self.beam_path:
-            self.beam_path.append((TILE_SIZE * (self.x + self.vx), TILE_SIZE * (self.y + self.vy)))
+            if light_piece.colliderect(main_mirror.rect):
+                self.reflect()
+            pygame.draw.rect(rect_screen, pygame.Color('violet'), light_piece)
+        screen.blit(rect_screen, (0, 0))
+
+    def reflect(self):
+        if int(main_mirror.angle) in range(30, 100) or \
+                int(main_mirror.angle) in range(-30, -100, -1):
+            print(main_mirror.angle)
+
+
+class Mirror(pygame.sprite.Sprite, GameObject):
+    def __init__(self):
+        super().__init__(all_sprites, mirror)
+        self.image = m_image
+        self.angle = 0
+        self.rect = self.image.get_rect()
+
+    def update(self, *args):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        rel_x, rel_y = mouse_x - self.rect.x, mouse_y - self.rect.y
+        self.angle = (180 / math.pi) * -math.atan2(rel_y, rel_x)
+        self.image = pygame.transform.rotate(m_image, int(self.angle))
+        self.rect = self.image.get_rect()
+        self.rect.x = player.rect.x - 30
+        self.rect.y = player.rect.y - 80
 
 
 def load_image(name, trans=0):
@@ -145,13 +176,15 @@ spikes = pygame.sprite.Group()
 walls = pygame.sprite.Group()
 exits = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
-light_beam = pygame.sprite.Group()
-
+light_group = pygame.sprite.Group()
+mirror = pygame.sprite.Group()
 
 pygame.init()
 screen = pygame.display.set_mode((1300, 750))
 clock = pygame.time.Clock()
 player, level_x, level_y = generate_level(load_level('lvl.txt'))
+m_image = load_image('backup.png')
+main_mirror = Mirror()
 
 running = True
 while running:
@@ -168,6 +201,7 @@ while running:
     elif keys[pygame.K_LEFT] and not keys[pygame.K_RIGHT]:
         player.move(-10, 0)
     all_sprites.update()
+    mirror.draw(screen)
     for elem in all_sprites:
         res = elem.collide_with_sth()
         if res[0]:
