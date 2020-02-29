@@ -1,3 +1,4 @@
+from menu import start_up
 import additional_functions
 import time
 import pygame
@@ -52,7 +53,7 @@ class Player(pygame.sprite.Sprite, GameObject):
             exec(f'screen.blit(Running{letter}rev[{animRun} // 5], coords)')
 
     def move(self, x, y):
-        old_x, old_y, w, h = self.rect
+        old_x, old_y, w, h = [int(x) for x in self.rect]
         self.rect = pygame.Rect(old_x, old_y + y, w, h)
         if self.vy == 0 and not self.collide_with_sth(Wall)[0]:
             self.vy = 5 * self.direction
@@ -282,7 +283,6 @@ def pause():
     bg = pygame.transform.scale(additional_functions.load_image('pause.jpg', -1),
                                 (settings.WIDTH, settings.HEIGHT))
     screen.blit(bg, (0, 0))
-    next_level_button = additional_functions.Button(200, 50, (11, 9), 'Сменить уровень', buttons, screen)
     to_menu_button = additional_functions.Button(200, 50, (11, 11), 'Меню', buttons, screen)
     buttons.update()
     pygame.display.flip()
@@ -291,14 +291,39 @@ def pause():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if next_level_button.rect.collidepoint(event.pos):
-                    break
-                elif to_menu_button.rect.collidepoint(event.pos):
+                if to_menu_button.rect.collidepoint(event.pos):
                     pygame.quit()
                     import menu
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE] and time.time() - time_0 > 0.25:
             break
+
+
+def win():
+    global player, level_x, level_y
+
+    time_0 = time.time()
+    screen.fill(pygame.Color('black'))
+    bg = pygame.transform.scale(additional_functions.load_image('win_menu.jpg', -1),
+                                (settings.WIDTH, settings.HEIGHT))
+    screen.blit(bg, (0, 0))
+    levels = [additional_functions.Button(175, 50, (6 * i - 1, 3 * j), str((j - 1) * 3 + i), buttons, screen)
+              for i in range(1, 4) for j in range(1, 5)]
+    buttons.update()
+    pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                for button in levels:
+                    if button.rect.collidepoint(event.pos):
+                        settings.CURRENT_LEVEL = f'lvl{button.text}'
+                        pygame.quit()
+                        import main
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_ESCAPE] and time.time() - time_0 > 0.25:
+                break
 
 
 all_sprites = pygame.sprite.Group()
@@ -353,7 +378,7 @@ while True:
         left = True
         right = False
         player.move(-10, 0)
-    elif keys[pygame.K_ESCAPE]:
+    elif keys[pygame.K_ESCAPE] and time.time() - time_from_last_esc > 0.25:
         pause()
         time_from_last_esc = time.time()
     else:
@@ -372,14 +397,14 @@ while True:
                     additional_functions.load_image('death_screen.jpg'), (settings.WIDTH, settings.HEIGHT)
                 )
                 screen.blit(background_image, (0, -150))
-                restart_button = additional_functions.Button(200, 50, (11, 8), 'Заново', buttons, screen)
-                exit_button = additional_functions.Button(200, 50, (11, 10), 'Выход', buttons, screen)
+                restart_button = additional_functions.Button(200, 50, (11, 9), 'Заново', buttons, screen)
+                exit_button = additional_functions.Button(200, 50, (11, 11), 'Выход', buttons, screen)
                 while True:
                     for event in pygame.event.get():
                         if event.type == pygame.MOUSEBUTTONDOWN:
                             if exit_button.rect.collidepoint(event.pos):
                                 pygame.quit()
-                                import menu
+                                start_up()
                             elif restart_button.rect.collidepoint(event.pos):
                                 pygame.quit()
                                 import main
@@ -392,6 +417,6 @@ while True:
                     pygame.display.flip()
     for elem in balls:
         if elem.collide_with_sth(Exit)[0]:
-            print('Победа')
+            win()
     clock.tick(60)
     pygame.display.flip()
