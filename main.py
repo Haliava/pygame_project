@@ -365,7 +365,7 @@ while True:
     for elem in player_group:
         res = elem.collide_with_sth()
         if res[0]:
-            if res[1] == Wall:
+            if res[1] in (Wall, Exit):
                 elem.rect.x += 10 if elem.rect.x <= TILE_SIZE else -10
             elif res[1] == Spike:
                 background_image = pygame.transform.scale(
