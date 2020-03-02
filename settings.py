@@ -8,8 +8,8 @@ HEIGHT = 750
 VOLUME = 0.01
 MUSIC_VOLUME = 0.3
 TILE_SIZE = 50
-CURRENT_LEVEL = 'lvl2'
-LEVELS = ['lvl1', 'lvl2', 'lvl3', 'lvl4', 'lvl5']
+CURRENT_LEVEL = 'lvl4'
+LEVELS = ['lvl1', 'lvl2', 'lvl3.txt', 'lvl4', 'lvl5']
 
 boxes_group = pygame.sprite.Group()
 
@@ -55,7 +55,6 @@ class InputBox(pygame.sprite.Sprite):
                     except ValueError:
                         self.text = 'Ошибка'
                 elif event.key == pygame.K_BACKSPACE:
-                    print(123)
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
@@ -75,7 +74,7 @@ def settings_screen():
     screen.blit(background_image, (0, 0))
 
     back_to_menu = additional_functions.Button(200, 50, (1, 13), 'Вернуться к меню', buttons, screen)
-    fps_box = InputBox(200, 50, (11, 7), 'FPS', 'VOLUME')
+    fps_box = InputBox(200, 50, (11, 7), 'FPS', 'FPS')
     music_box = InputBox(200, 50, (11, 9), 'Громкость музыки', 'MUSIC_VOLUME')
     volume_box = InputBox(200, 50, (11, 11), 'Громкость звуков', 'VOLUME')
     boxes_group.add(music_box)
