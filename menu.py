@@ -1,10 +1,11 @@
-def start_up():
-    import additional_functions
-    import settings
-    import pygame
-    import sys
-    import os
+import additional_functions
+import settings
+import pygame
+import sys
+import os
 
+
+def start():
     pygame.init()
     screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
     buttons = pygame.sprite.Group()
@@ -21,16 +22,6 @@ def start_up():
             image = image.convert_alpha()
         return image
 
-    def terminate():
-        if is_exited:
-            sys.exit()
-        if settings_opened:
-            pygame.quit()
-            settings.settings_screen()
-        else:
-            pygame.quit()
-            import main
-
     background_image = pygame.transform.scale(load_image('bg.png'), (settings.WIDTH, settings.HEIGHT))
     screen.blit(background_image, (0, 0))
     is_exited = False
@@ -45,16 +36,15 @@ def start_up():
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    terminate()
+                    sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if start_button.rect.collidepoint(event.pos):
-                        terminate()
+                        import main
                     elif settings_button.rect.collidepoint(event.pos):
-                        settings_opened = True
-                        terminate()
+                        from settings import settings_screen
+                        settings_screen()
                     elif exit_button.rect.collidepoint(event.pos):
-                        is_exited = True
-                        terminate()
+                        sys.exit()
                 elif event.type == pygame.MOUSEMOTION:
                     rel = event.rel
                     screen.blit(background_image, (rel[0] * 0.2, rel[1] * 0.2))
@@ -63,3 +53,6 @@ def start_up():
             clock.tick(60)
 
     start_screen()
+
+
+start()
