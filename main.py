@@ -1,15 +1,17 @@
-from menu import start_up
-import additional_functions
-import time
-import pygame
-import settings
 import math
 import sys
+import time
+
+import additional_functions
+import pygame
+import settings
 
 TILE_SIZE = settings.TILE_SIZE
 
 idleL, idleR, RunningL, RunningR = [list() for _ in range(4)]
 idleLrev, idleRrev, RunningLrev, RunningRrev = [list() for _ in range(4)]
+
+animIdle, animRun = 0, 0
 
 
 class GameObject:
@@ -127,25 +129,27 @@ class Ball(pygame.sprite.Sprite, GameObject):
             is_collided_with_wall = self.collide_with_sth(Wall)
             is_collided_with_mirror = self.collide_with_sth(Mirror)
             if is_collided_with_wall[0]:
-                # проверяется клетка, в которую прилетит шар на следующем кадре, на столкновения со стенами
+                # проверяется клетка, в которую прилетит шар на следующем кадре, на столкновение со стенами
                 initial_ball_tile = (self.rect.center[0] // TILE_SIZE, self.rect.center[1] // TILE_SIZE)
                 ball_tile = ((self.rect.center[0] + self.vx) // TILE_SIZE, (self.rect.center[1] + self.vy) // TILE_SIZE)
                 for wall in walls:
                     if (wall.initial_x, wall.initial_y) == ball_tile:
-                        if abs(initial_ball_tile[0] - ball_tile[0]) == 1:
+                        if abs(initial_ball_tile[0] - ball_tile[0]) == 1 and \
+                                abs(initial_ball_tile[1] - ball_tile[1]) != 1:
                             self.vx *= -1
-                        if abs(initial_ball_tile[1] - ball_tile[1]) == 1:
+                        elif abs(initial_ball_tile[1] - ball_tile[1]) == 1 and \
+                                abs(initial_ball_tile[0] - ball_tile[0]) != 1:
                             self.vy *= -1
-                # TODO self.hits += 1
+                        elif abs(initial_ball_tile[1] - ball_tile[1]) == 1 and \
+                                abs(initial_ball_tile[0] - ball_tile[0]) == 1:
+                            # непридвиденные обстоятельства
+                            self.rect = pygame.Rect(TILE_SIZE * self.initial_x,
+                                                    TILE_SIZE * self.initial_y,
+                                                    self.r, self.r)
+                            self.vx = 0
+                            self.vy = 5
             elif is_collided_with_mirror[0]:
                 self.reflect()
-                # TODO self.hits += 1
-        if self.hits > 5:
-            # анимация разрушения шара
-            self.rect = pygame.Rect(TILE_SIZE * self.initial_x, TILE_SIZE * self.initial_y, self.r, self.r)
-            self.vx = 0
-            self.vy = 5
-            self.hits = 0
         self.rect.x += self.vx
         self.rect.y += self.vy
         pygame.draw.circle(screen, pygame.Color('yellow'), (self.rect.x, self.rect.y), self.r)
@@ -156,12 +160,12 @@ class Ball(pygame.sprite.Sprite, GameObject):
             num = 5
         else:
             num = -5
-        if angle in range(-20, -50, -1):
+        if angle in range(-20, -71, -1):
             self.vx = num
         if angle in range(0, 10):
             self.vx = 0
             self.vy = -num
-        elif angle in range(0, 50):
+        elif angle in range(0, 71):
             self.vx = -num
         self.vy = -num
 
@@ -179,7 +183,6 @@ class Mirror(pygame.sprite.Sprite, GameObject):
         ↑ - от 0 до 10 градусов
         → - от -20 до -50 градусов
         ← - от 0 до 50 градусов
-
         """
         mouse_x, mouse_y = pygame.mouse.get_pos()
         rel_x, rel_y = mouse_x - self.rect.x, mouse_y - self.rect.y
@@ -196,7 +199,6 @@ class Mirror(pygame.sprite.Sprite, GameObject):
 
 def generate_level(level):
     """Загрузить уровень из list в объекты, составляющие его
-
     . - пустая клетка
     # - клетка-стена
     ^ - клетка-шип
@@ -204,7 +206,6 @@ def generate_level(level):
     $ - клетка-выход
     | - клетка-шар
     (размер всех клеток равен параметру TILE_SIZE из файла settings.py)
-
     """
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -263,7 +264,7 @@ def im(arr):
 
 
 def draw():
-    global player, animIdle, animRun
+    global animIdle, animRun
     if animIdle >= 85:
         animIdle = 0
     if animRun >= 55:
@@ -292,8 +293,9 @@ def pause():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if to_menu_button.rect.collidepoint(event.pos):
-                    pygame.quit()
-                    import menu
+                    pygame.mixer.music.stop()
+                    from menu import start
+                    start()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE] and time.time() - time_0 > 0.25:
             break
@@ -301,7 +303,6 @@ def pause():
 
 def win():
     global player, level_x, level_y
-
     time_0 = time.time()
     screen.fill(pygame.Color('black'))
     bg = pygame.transform.scale(additional_functions.load_image('win_menu.jpg', -1),
@@ -340,17 +341,17 @@ screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
 clock = pygame.time.Clock()
 ball_hit_sound = pygame.mixer.Sound('data/ball_hit.wav')
 pygame.mixer.music.load('data/ambiance_loop.wav')
-pygame.mixer.music.set_volume(.5)
+pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)
 ball_hit_sound.set_volume(settings.VOLUME)
 player, level_x, level_y = generate_level(additional_functions.load_level(f'{settings.CURRENT_LEVEL}.txt'))
 m_image = additional_functions.load_image('mim.jpg')
 main_mirror = Mirror()
 
 animation()
-animIdle, animRun = 0, 0
 time_from_last_esc = time.time() - 0.5
 
 left, right = False, False
+shift_pressed = False
 running = True
 pygame.mixer.music.play(-1)
 sum1, stay = 0, 0
@@ -365,6 +366,13 @@ while True:
             if e.button == 1 and player.ready_to_change_gravity:
                 sum1 += 1
                 player.change_gravity()
+        elif e.type == pygame.KEYDOWN:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.KMOD_LSHIFT]:
+                shift_pressed = True
+        elif e.type == pygame.KEYUP:
+            if e.key == pygame.KMOD_LSHIFT:
+                shift_pressed = False
     keys = pygame.key.get_pressed()
     if keys[pygame.K_RIGHT] and not keys[pygame.K_LEFT] or \
             keys[pygame.K_d] and not keys[pygame.K_a]:
@@ -396,6 +404,7 @@ while True:
                 background_image = pygame.transform.scale(
                     additional_functions.load_image('death_screen.jpg'), (settings.WIDTH, settings.HEIGHT)
                 )
+                screen.fill(pygame.Color('black'))
                 screen.blit(background_image, (0, -150))
                 restart_button = additional_functions.Button(200, 50, (11, 9), 'Заново', buttons, screen)
                 exit_button = additional_functions.Button(200, 50, (11, 11), 'Выход', buttons, screen)
@@ -403,20 +412,23 @@ while True:
                     for event in pygame.event.get():
                         if event.type == pygame.MOUSEBUTTONDOWN:
                             if exit_button.rect.collidepoint(event.pos):
-                                pygame.quit()
-                                start_up()
+                                from menu import start
+
+                                start()
                             elif restart_button.rect.collidepoint(event.pos):
                                 pygame.quit()
-                                import main
                         elif event.type == pygame.MOUSEMOTION:
                             screen.fill(pygame.Color('black'))
                             rel = event.rel
                             screen.blit(background_image, (rel[0] * 0.2, rel[1] * 0.2 - 150))
                     buttons.update()
-                    clock.tick(60)
+                    clock.tick(settings.FPS)
                     pygame.display.flip()
     for elem in balls:
         if elem.collide_with_sth(Exit)[0]:
             win()
-    clock.tick(60)
+    if shift_pressed:
+        clock.tick(30)
+    else:
+        clock.tick(settings.FPS)
     pygame.display.flip()
