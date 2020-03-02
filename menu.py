@@ -39,7 +39,8 @@ def start():
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if start_button.rect.collidepoint(event.pos):
-                        import main
+                        from main import game_loop
+                        game_loop()
                     elif settings_button.rect.collidepoint(event.pos):
                         from settings import settings_screen
                         settings_screen()
