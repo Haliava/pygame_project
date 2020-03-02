@@ -56,8 +56,9 @@ class Player(pygame.sprite.Sprite, GameObject):
         self.rect = pygame.Rect(old_x, old_y + y, w, h)
         if self.vy == 0 and not self.collide_with_sth(Wall)[0]:
             self.vy = 5 * self.direction
-        if self.collide_with_sth(Wall)[0]:
-            collision_coords = self.collide_with_sth(Wall)[1]
+        if self.collide_with_sth(Wall)[0] or self.collide_with_sth(Exit)[0]:
+            collision_coords = self.collide_with_sth(Wall)[1] \
+                if self.collide_with_sth(Wall)[0] else self.collide_with_sth(Exit)[1]
             self.rect.y = collision_coords[1] + -(TILE_SIZE * self.direction)
             self.ready_to_change_gravity = True
             self.vy = 0
