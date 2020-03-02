@@ -103,3 +103,43 @@ def load_image(name, trans=0):
     else:
         image = image.convert_alpha()
     return image
+
+
+idleL, idleR, RunningL, RunningR = [list() for _ in range(4)]
+idleLrev, idleRrev, RunningLrev, RunningRrev = [list() for _ in range(4)]
+
+animIdle, animRun = 0, 0
+
+
+def animation():
+    global idleL, idleR, RunningL, RunningR
+    global idleLrev, idleRrev, RunningLrev, RunningRrev
+
+    # Бездействие
+    for i in range(18):
+        idleR.append(pygame.image.load(f'data/idleR/0_Reaper_Man_Idle_{str(i).rjust(3, "0")}.png'))
+    for i in range(18):
+        idleL.append(pygame.image.load(f'data/idleL/0_Reaper_Man_Idle_{str(i).rjust(3, "0")}.png'))
+
+    # Бег
+    for i in range(12):
+        RunningR.append(pygame.image.load(f'data/RunningR/0_Reaper_Man_Running_{str(i).rjust(3, "0")}.png'))
+    for i in range(12):
+        RunningL.append(pygame.image.load(f'data/RunningL/0_Reaper_Man_Running_{str(i).rjust(3, "0")}.png'))
+
+    # Бездействие ревёрс
+    for i in range(18):
+        idleRrev.append(pygame.image.load(f'data/idleRrev/0_Reaper_Man_Idle_{str(i).rjust(3, "0")}.png'))
+    for i in range(18):
+        idleLrev.append(pygame.image.load(f'data/idleLrev/0_Reaper_Man_Idle_{str(i).rjust(3, "0")}.png'))
+
+    # Бег ревёрс
+    for i in range(12):
+        RunningRrev.append(pygame.image.load(f'data/RunningRrev/0_Reaper_Man_Running_{str(i).rjust(3, "0")}.png'))
+    for i in range(12):
+        RunningLrev.append(pygame.image.load(f'data/RunningLrev/0_Reaper_Man_Running_{str(i).rjust(3, "0")}.png'))
+
+    for elem in [idleR, idleL, RunningL, RunningR, idleRrev, idleLrev, RunningLrev, RunningRrev]:
+        for i in range(len(elem)):
+            elem[i] = elem[i].convert()
+            elem[i].set_colorkey((255, 255, 255))
