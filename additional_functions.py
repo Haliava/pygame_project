@@ -35,6 +35,12 @@ class Button(pygame.sprite.Sprite):
         text_coord += intro_rect.height
         self.screen.blit(string_rendered, intro_rect)
 
+    def delete(self):
+        self.rect = None
+        self.screen = None
+        self.text = None
+        self.coords = None
+
 
 class Fader:
     """Затемнение экрана при переходе к и от экрана смерти
