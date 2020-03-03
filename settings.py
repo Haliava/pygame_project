@@ -5,11 +5,11 @@ import sys
 FPS = 60
 WIDTH = 1300
 HEIGHT = 750
-VOLUME = 0.01
-MUSIC_VOLUME = 0.3
+VOLUME = 0.008
+MUSIC_VOLUME = 0.1
 TILE_SIZE = 50
 CURRENT_LEVEL = 'lvl4'
-LEVELS = ['lvl1', 'lvl2', 'lvl3.txt', 'lvl4', 'lvl5']
+LEVELS = ['lvl1', 'lvl2', 'lvl3', 'lvl4', 'lvl5', 'lvl6', 'lvl7', 'lvl8', 'lvl9', 'lvl10', 'lvl11', 'lvl12']
 
 boxes_group = pygame.sprite.Group()
 
@@ -65,14 +65,11 @@ class InputBox(pygame.sprite.Sprite):
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
 
-def settings_screen():
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+def settings_screen(screen):
     buttons = pygame.sprite.Group()
     clock = pygame.time.Clock()
     background_image = pygame.transform.scale(additional_functions.load_image('bg.png'), (WIDTH, HEIGHT))
     screen.blit(background_image, (0, 0))
-
     back_to_menu = additional_functions.Button(200, 50, (1, 13), 'Вернуться к меню', buttons, screen)
     fps_box = InputBox(200, 50, (11, 7), 'FPS', 'FPS')
     music_box = InputBox(200, 50, (11, 9), 'Громкость музыки', 'MUSIC_VOLUME')
@@ -108,8 +105,8 @@ def settings_screen():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if back_to_menu.rect.collidepoint(event.pos):
-                    from menu import start
-                    start()
+                    from menu import start_menu
+                    return start_menu(screen)
             elif event.type == pygame.MOUSEMOTION:
                 rel = event.rel
                 screen.blit(background_image, (rel[0] * 0.2, rel[1] * 0.2))
