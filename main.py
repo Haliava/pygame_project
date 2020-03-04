@@ -176,7 +176,7 @@ def main_game():
                 num = 5
             else:
                 num = -5
-            if angle in range(-20, -71, -1):
+            if angle in range(-10, -71, -1):
                 self.vx = num
             if angle in range(0, 10):
                 self.vx = 0
